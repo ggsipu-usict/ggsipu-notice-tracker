@@ -158,7 +158,6 @@ def send_msg(msg):
                     f"Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
-            # logger.error(f"Connection Error- {ConnectionError} /sendDocument.")
             pass
     return False
 
@@ -188,7 +187,6 @@ def send_file(msg, fname, bfile):
                     f"Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
-            # logger.error(f"Connection Error- {ConnectionError} /sendDocument.")
             pass
     return False
 
@@ -198,7 +196,6 @@ def main():
         logger.debug(f"Retriving {NOTICE_URL}.")
 
         html = get(NOTICE_URL).text
-        # html = open('test.html', 'r').read()
         soup = bs.BeautifulSoup(html, 'lxml')
 
         n_gen = get_notices(soup)
@@ -225,7 +222,8 @@ def main():
                 res1 = send_msg(msg)
             else:
                 logger.info(f"Download complete for {n['url']} .")
-                msg = f"{n['title']} \n\nDate:- {n['date']}"
+                # msg = f"{n['title']} \n\nDate:- {n['date']}"
+                msg = f"Date:- {n['date']} \n{n['title']}"
                 res1 = send_file(msg, path.basename(n['url']), n_content)
 
             finally:
