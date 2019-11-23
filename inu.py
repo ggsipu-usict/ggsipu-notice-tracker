@@ -1,6 +1,7 @@
 from os import path, environ, getcwd
 from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
 import yaml
+from functools import cmp_to_key
 
 import bs4 as bs
 from requests import post, get
@@ -212,7 +213,10 @@ def main():
             else:
                 break
 
-        for n in reversed(notices):
+        notices.sort(key=cmp_to_key(
+            lambda x, y: newer_date(x['date'], y['date'])))
+
+        for n in notices:
             logger.info(f"Sending {n}.")
             try:
                 logger.info(f"Downloading notice file {n['url']} .")
