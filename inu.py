@@ -1,11 +1,12 @@
 from os import path, environ, getcwd
-import logging
+from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
 import yaml
 
 import bs4 as bs
 from requests import post, get
 from requests.exceptions import ConnectionError
 
+LOG_PATH = 'inu.log'
 
 BASE_URL = "http://www.ipu.ac.in"
 NOTICE_URL = BASE_URL + "/notices.php"
@@ -17,9 +18,30 @@ BOT_TOKEN = environ['bottoken']
 T_API_RETRIES = 100
 
 
-logging.basicConfig(filename='inu.log', filemode='a+', level=logging.DEBUG,
-                    format='%(asctime)s [%(levelname)s]: %(message)s',
-                    datefmt='%m/%d/%Y %I:%M:%S %p')
+def setupLogging(logfile):
+    logger = getLogger()
+    logger.setLevel(DEBUG)
+
+    # Set up logging to the logfile.
+    filehandler = handlers.RotatingFileHandler(
+        filename=logfile,
+        maxBytes=5 * 1024 * 1024,
+        backupCount=100)
+    filehandler.setLevel(DEBUG)
+    fileformatter = Formatter(
+        '%(asctime)s %(levelname)-8s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    filehandler.setFormatter(fileformatter)
+    logger.addHandler(filehandler)
+
+    # Set up logging to the console.
+    streamhandler = StreamHandler()
+    streamhandler.setLevel(INFO)
+    streamformatter = Formatter(
+        '%(asctime)s [%(levelname)s]: %(message)s', datefmt='%I:%M:%S %p')
+    streamhandler.setFormatter(streamformatter)
+    logger.addHandler(streamhandler)
+
+    return logger
 
 
 def only_notice_tr(tag):
@@ -57,16 +79,16 @@ def load_last():
         with open(LAST_NOTICE, 'r') as fr:
             l_notice = yaml.load(fr, Loader=yaml.CLoader)
             return l_notice
-        logging.debug(f"Loaded last notice from {LAST_NOTICE}.")
+        logger.debug(f"Loaded last notice from {LAST_NOTICE}.")
     else:
-        logging.debug(f"File {LAST_NOTICE} not found.")
+        logger.debug(f"File {LAST_NOTICE} not found.")
         return None
 
 
 def dump_last(notice):
     with open(LAST_NOTICE, 'w+') as fo:
         yaml.dump(notice, fo, Dumper=yaml.CDumper)
-    logging.debug(f"Dumped '{notice['title'][:20]}' to {LAST_NOTICE}")
+    logger.debug(f"Dumped '{notice['title'][:20]}' to {LAST_NOTICE}")
 
 
 def _scrap_notice_tr(tr):
@@ -122,20 +144,21 @@ def send_msg(msg):
     )
     for _ in range(T_API_RETRIES):
         try:
-            logging.debug(f"Sending message to /sendMessage.")
+            logger.debug(f"Sending message to /sendMessage.")
 
-            logging.getLogger().setLevel(logging.INFO)
+            logger.setLevel(INFO)
             telegram_req = post(telegram_url, params=params)
-            logging.getLogger().setLevel(logging.DEBUG)
+            logger.setLevel(DEBUG)
 
             if telegram_req.status_code == 200:
-                logging.info("Sucessfully send to /sendDocument.")
+                logger.info("Sucessfully send to /sendDocument.")
                 return True
             else:
-                logging.error(f"Recieved {telegram_req.status_code} http code from /sendDocument.")
+                logger.error(
+                    f"Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
-            # logging.error(f"Connection Error- {ConnectionError} /sendDocument.")
+            # logger.error(f"Connection Error- {ConnectionError} /sendDocument.")
             pass
     return False
 
@@ -151,28 +174,29 @@ def send_file(msg, fname, bfile):
 
     for _ in range(T_API_RETRIES):
         try:
-            logging.debug(f"Sending file to /sendDocument.")
+            logger.debug(f"Sending file to /sendDocument.")
 
-            logging.getLogger().setLevel(logging.INFO)
+            logger.setLevel(INFO)
             telegram_req = post(telegram_url, data=data, files=files)
-            logging.getLogger().setLevel(logging.DEBUG)
+            logger.setLevel(DEBUG)
 
             if telegram_req.status_code == 200:
-                logging.info("Sucessfully send to /sendDocument.")
+                logger.info("Sucessfully send to /sendDocument.")
                 return True
             else:
-                logging.error(f"Recieved {telegram_req.status_code} http code from /sendDocument.")
+                logger.error(
+                    f"Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
-            # logging.error(f"Connection Error- {ConnectionError} /sendDocument.")
+            # logger.error(f"Connection Error- {ConnectionError} /sendDocument.")
             pass
     return False
 
 
 def main():
     try:
-        logging.debug(f"Retriving {NOTICE_URL}.")
-        
+        logger.debug(f"Retriving {NOTICE_URL}.")
+
         html = get(NOTICE_URL).text
         # html = open('test.html', 'r').read()
         soup = bs.BeautifulSoup(html, 'lxml')
@@ -185,37 +209,40 @@ def main():
         notices = []
         for nt in n_gen:
             if nt != last_notice:
-                logging.info(f"Found New Notice - {nt}")
+                logger.info(f"Found New Notice - {nt}")
                 notices.append(nt)
             else:
                 break
 
         for n in reversed(notices):
-            logging.info(f"Sending {n}.")
+            logger.info(f"Sending {n}.")
             try:
-                logging.info(f"Downloading notice file {n['url']} .")
+                logger.info(f"Downloading notice file {n['url']} .")
                 n_content = get(BASE_URL + n['url']).content
             except:
-                logging.error("Failed to download file.")
+                logger.error("Failed to download file.")
                 msg = f"{n['title']} \n    - [Download]({n['url']}) \n**Date:-** {n['date']}"
-                res = send_msg(msg)
+                res1 = send_msg(msg)
             else:
-                logging.info(f"Download complete for {n['url']} .")
+                logger.info(f"Download complete for {n['url']} .")
                 msg = f"{n['title']} \n\nDate:- {n['date']}"
-                res = send_file(msg, path.basename(n['url']), n_content)
+                res1 = send_file(msg, path.basename(n['url']), n_content)
+
             finally:
-                if res:
+                if res1:
                     dump_last(n)
                 else:
-                    logging.critical(f"Failed to send {n} after {T_API_RETRIES} retries.")
-                          
-    except Exception as ex:
-        logging.fatal(str(ex))
-        return
+                    logger.critical(
+                        f"Failed to send {n} after {T_API_RETRIES} retries.")
 
+    except Exception as ex:
+        logger.fatal(str(ex))
+        raise ex
 
 
 if __name__ == "__main__":
-    logging.info("SCRIPT STARTED")
+    logger = setupLogging(LOG_PATH)
+
+    logger.info("SCRIPT STARTED")
     main()
-    logging.info("SCRIPT ENDED")
+    logger.info("SCRIPT ENDED")
