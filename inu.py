@@ -51,7 +51,8 @@ def only_notice_tr(tag):
 def newer_date(date1, date2):
     """
     Return None if both dates are same otherwise
-    newer date
+    If date1 > date2, return True
+    If date1 < date2, return False
     """
 
     d1 = [int(s.lstrip('0')) for s in date1.split('-')]
@@ -60,9 +61,9 @@ def newer_date(date1, date2):
 
     def comp(a):
         if a > 0:
-            return date1
+            return True
         elif a < 0:
-            return date2
+            return False
         else:
             return None
 
