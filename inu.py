@@ -15,7 +15,7 @@ NOTICE_URL = BASE_URL + "/notices.php"
 WORK_DIR = getcwd()
 LAST_NOTICE = path.join(WORK_DIR, 'yaml', 'last.yaml')
 
-TG_CHAT = "@test9971"
+TG_CHAT = "@ggsipu_notices"
 BOT_TOKEN = environ['bottoken']
 T_API_RETRIES = 100
 
@@ -84,7 +84,7 @@ def load_last():
             return l_notice
         logger.debug(f"Loaded last notice from {LAST_NOTICE}.")
     else:
-        logger.debug(f"File {LAST_NOTICE} not found.")
+        logger.debug(f"Not loading last notice as file {LAST_NOTICE} not found.")
         return None
 
 
@@ -162,6 +162,8 @@ def send_msg(msg):
                 return False
         except ConnectionError:
             pass
+    logger.critical(
+        f"Failed to send message after {T_API_RETRIES} retries.")
     return False
 
 
@@ -176,21 +178,23 @@ def send_file(msg, fname, bfile):
 
     for _ in range(T_API_RETRIES):
         try:
-            logger.debug(f"Sending file {fname} to /sendDocument.")
+            logger.debug(f"Sending file [{fname}] to /sendDocument.")
 
             logger.setLevel(INFO)
             telegram_req = post(telegram_url, data=data, files=files)
             logger.setLevel(DEBUG)
 
-            if telegram_req.status_code == 200: 
-                logger.info("Sucessfully send {fname} to /sendDocument.")
+            if telegram_req.status_code == 200:
+                logger.info("Sucessfully send [{fname}] to /sendDocument.")
                 return True
             else:
                 logger.error(
-                    f"Failed to send {fname}. Recieved {telegram_req.status_code} http code from /sendDocument.")
+                    f"Failed to send [{fname}]. Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
             pass
+    logger.critical(
+        f"Failed to send [{fname}] after {T_API_RETRIES} retries.")
     return False
 
 
@@ -228,7 +232,7 @@ def main():
                 logger.error(f"Failed to download file {n['url']}.")
                 msg = f"{n['title']} \n    - [Download]({n['url']}) \n**Date:-** {n['date']}"
                 res1 = send_msg(msg)
-            else: 
+            else:
                 logger.info(f"Download complete for {n['url']} .")
                 # msg = f"{n['title']} \n\nDate:- {n['date']}"
                 msg = f"Date:- {n['date']} \n{n['title']}"
@@ -237,10 +241,7 @@ def main():
             finally:
                 if res1:
                     dump_last(n)
-                else:
-                    logger.critical(
-                        f"Failed to send {n} after {T_API_RETRIES} retries.")
-
+    
     except Exception as ex:
         logger.fatal(str(ex))
         raise ex
