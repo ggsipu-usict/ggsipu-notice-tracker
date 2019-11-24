@@ -24,26 +24,27 @@ T_API_RETRIES = 100
 
 PRODUCTION = environ.get('PRODUCTION', None)
 
-def setupLogging(logfile):
+def setupLogging(logfile, to_file = True):
     logger = getLogger()
     logger.setLevel(DEBUG)
 
-    # Set up logging to the logfile.
-    filehandler = handlers.RotatingFileHandler(
-        filename=logfile,
-        maxBytes=5 * 1024 * 1024,
-        backupCount=100)
-    filehandler.setLevel(DEBUG)
-    fileformatter = Formatter(
-        '%(asctime)s %(levelname)-8s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-    filehandler.setFormatter(fileformatter)
-    logger.addHandler(filehandler)
+    if to_file:
+        # Set up logging to the logfile.
+        filehandler = handlers.RotatingFileHandler(
+            filename=logfile,
+            maxBytes=5 * 1024 * 1024,
+            backupCount=100)
+        filehandler.setLevel(DEBUG)
+        fileformatter = Formatter(
+            '%(asctime)s %(levelname)-8s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+        filehandler.setFormatter(fileformatter)
+        logger.addHandler(filehandler)
 
     # Set up logging to the console.
     streamhandler = StreamHandler()
-    streamhandler.setLevel(INFO)
+    streamhandler.setLevel(DEBUG)
     streamformatter = Formatter(
-        '%(asctime)s [%(levelname)s]: %(message)s', datefmt='%I:%M:%S %p')
+        '%(asctime)s [%(levelname)s]: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     streamhandler.setFormatter(streamformatter)
     logger.addHandler(streamhandler)
 
@@ -276,8 +277,11 @@ def main():
 
 
 if __name__ == "__main__":
-    logger = setupLogging(LOG_PATH)
-
-    logger.info("SCRIPT STARTED")
+    if PRODUCTION:
+        logger = setupLogging(LOG_PATH, False)
+        logger.log("SCRIPT STARTED [ON SERVER]")
+    else:
+        logger = setupLogging(LOG_PATH, True)
+        logger.log("SCRIPT STARTED [LOCAL]")
     main()
     logger.info("SCRIPT ENDED")
