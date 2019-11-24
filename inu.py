@@ -1,9 +1,10 @@
-from os import path, environ, getcwd
+from os import path, environ, getcwd, system
 from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
-import yaml
 from functools import cmp_to_key
+from datetime import datetime
 
 
+import yaml
 import bs4 as bs
 from requests import post, get
 from requests.exceptions import ConnectionError
@@ -13,12 +14,15 @@ LOG_PATH = 'inu.log'
 BASE_URL = "http://www.ipu.ac.in"
 NOTICE_URL = BASE_URL + "/notices.php"
 WORK_DIR = getcwd()
-LAST_NOTICE = path.join(WORK_DIR, 'yaml', 'last.yaml')
+LAST_NOTICE = path.join(WORK_DIR, 'yaml', 'last.yml')
+LAST_NOTICE_REMOTE = "https://raw.githubusercontent.com/GGSIPUResultTracker/test-repo/master/yaml/last.yml"
 
 TG_CHAT = "@ggsipu_notices"
-BOT_TOKEN = environ['bottoken']
+BOT_TOKEN = environ['BOTTOKEN']
+GIT_OAUTH_TOKEN = environ['GIT_OAUTH_TOKEN']
 T_API_RETRIES = 100
 
+PRODUCTION = environ.get('PRODUCTION', None)
 
 def setupLogging(logfile):
     logger = getLogger()
@@ -44,6 +48,21 @@ def setupLogging(logfile):
     logger.addHandler(streamhandler)
 
     return logger
+
+
+def git_commit_push():
+    """
+    git add - git commit - git push
+    [source -https://github.com/XiaomiFirmwareUpdater/mi-firmware-updater/blob/master/xfu.py]
+    """
+    now = str(datetime.today()).split('.')[0]
+    system("git add {2} && "" \
+           ""git -c \"user.name=GGSIPUTracker\" "
+           "-c \"user.email=ggsipuresulttracker@@gmail.com\" "
+           "commit -m \"sync: {0}\" && "" \
+           ""git push -q https://{1}@github.com/GGSIPUResultTracker/"
+           "test-repo.git HEAD:master"
+           .format(now, GIT_OAUTH_TOKEN, LAST_NOTICE))
 
 
 def only_notice_tr(tag):
@@ -78,14 +97,20 @@ def newer_date(date1, date2):
 
 
 def load_last():
-    if path.isfile(LAST_NOTICE):
-        with open(LAST_NOTICE, 'r') as fr:
-            l_notice = yaml.load(fr, Loader=yaml.CLoader)
-            return l_notice
-        logger.debug(f"Loaded last notice from {LAST_NOTICE}.")
+    if PRODUCTION:
+        logger.debug(f"Retriving {LAST_NOTICE_REMOTE}.")
+        l_yml = get(LAST_NOTICE_REMOTE).text
+        l_notice = yaml.load(l_yml, Loader=yaml.CLoader)
+        return l_notice
     else:
-        logger.debug(f"Not loading last notice as file {LAST_NOTICE} not found.")
-        return None
+        if path.isfile(LAST_NOTICE):
+            with open(LAST_NOTICE, 'r') as fr:
+                l_notice = yaml.load(fr, Loader=yaml.CLoader)
+                return l_notice
+            logger.debug(f"Loaded last notice from {LAST_NOTICE}.")
+        else:
+            logger.debug(f"Not loading last notice as file {LAST_NOTICE} not found.")
+            return None
 
 
 def dump_last(notice):
@@ -241,6 +266,9 @@ def main():
             finally:
                 if res1:
                     dump_last(n)
+        
+        if PRODUCTION:
+            git_commit_push()
     
     except Exception as ex:
         logger.fatal(str(ex))
