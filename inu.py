@@ -3,6 +3,7 @@ from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
 import yaml
 from functools import cmp_to_key
 
+
 import bs4 as bs
 from requests import post, get
 from requests.exceptions import ConnectionError
@@ -157,7 +158,7 @@ def send_msg(msg):
                 return True
             else:
                 logger.error(
-                    f"Recieved {telegram_req.status_code} http code from /sendDocument.")
+                    f"Failed to send message. Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
             pass
@@ -175,18 +176,18 @@ def send_file(msg, fname, bfile):
 
     for _ in range(T_API_RETRIES):
         try:
-            logger.debug(f"Sending file to /sendDocument.")
+            logger.debug(f"Sending file {fname} to /sendDocument.")
 
             logger.setLevel(INFO)
             telegram_req = post(telegram_url, data=data, files=files)
             logger.setLevel(DEBUG)
 
-            if telegram_req.status_code == 200:
-                logger.info("Sucessfully send to /sendDocument.")
+            if telegram_req.status_code == 200: 
+                logger.info("Sucessfully send {fname} to /sendDocument.")
                 return True
             else:
                 logger.error(
-                    f"Recieved {telegram_req.status_code} http code from /sendDocument.")
+                    f"Failed to send {fname}. Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
             pass
@@ -213,6 +214,8 @@ def main():
             else:
                 break
 
+        logger.info(f"{len(notices)} New Notices found !")
+
         notices.sort(key=cmp_to_key(
             lambda x, y: newer_date(x['date'], y['date'])))
 
@@ -222,10 +225,10 @@ def main():
                 logger.info(f"Downloading notice file {n['url']} .")
                 n_content = get(BASE_URL + n['url']).content
             except:
-                logger.error("Failed to download file.")
+                logger.error(f"Failed to download file {n['url']}.")
                 msg = f"{n['title']} \n    - [Download]({n['url']}) \n**Date:-** {n['date']}"
                 res1 = send_msg(msg)
-            else:
+            else: 
                 logger.info(f"Download complete for {n['url']} .")
                 # msg = f"{n['title']} \n\nDate:- {n['date']}"
                 msg = f"Date:- {n['date']} \n{n['title']}"
