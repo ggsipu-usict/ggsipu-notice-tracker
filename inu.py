@@ -119,7 +119,7 @@ def load_last():
 def dump_last(notice):
     with open(LAST_NOTICE, 'w+') as fo:
         yaml.dump(notice, fo, Dumper=yaml.CDumper)
-    logger.debug(f"Dumped '{notice['title'][:20]}' to {LAST_NOTICE}")
+    logger.debug(f"Dumped '{notice}' to {LAST_NOTICE}")
 
 
 def _scrap_notice_tr(tr):
@@ -213,7 +213,7 @@ def send_file(msg, fname, bfile):
             logger.setLevel(DEBUG)
 
             if telegram_req.status_code == 200:
-                logger.info("Sucessfully send [{fname}] to /sendDocument.")
+                logger.info(f"Sucessfully send [{fname}] to /sendDocument.")
                 return True
             else:
                 logger.error(
@@ -287,9 +287,9 @@ def main():
 if __name__ == "__main__":
     if PRODUCTION:
         logger = setupLogging(LOG_PATH, False)
-        logger.log("SCRIPT STARTED [ON SERVER]")
+        logger.info("SCRIPT STARTED [ON SERVER]")
     else:
         logger = setupLogging(LOG_PATH, True)
-        logger.log("SCRIPT STARTED [LOCAL]")
+        logger.info("SCRIPT STARTED [LOCAL]")
     main()
     logger.info("SCRIPT ENDED")
