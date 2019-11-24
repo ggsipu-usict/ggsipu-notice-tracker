@@ -98,20 +98,22 @@ def newer_date(date1, date2):
 
 
 def load_last():
+    l_notice = None
+    logger.debug("Loading Last sent notice.")
     if PRODUCTION:
         logger.debug(f"Retriving {LAST_NOTICE_REMOTE}.")
+
         l_yml = get(LAST_NOTICE_REMOTE).text
         l_notice = yaml.load(l_yml, Loader=yaml.CLoader)
-        return l_notice
     else:
         if path.isfile(LAST_NOTICE):
             with open(LAST_NOTICE, 'r') as fr:
                 l_notice = yaml.load(fr, Loader=yaml.CLoader)
-                return l_notice
-            logger.debug(f"Loaded last notice from {LAST_NOTICE}.")
+    
+            logger.debug(f"Found file {LAST_NOTICE}.")
         else:
-            logger.debug(f"Not loading last notice as file {LAST_NOTICE} not found.")
-            return None
+            logger.debug(f"file {LAST_NOTICE} not found.")
+    return l_notice
 
 
 def dump_last(notice):
@@ -234,6 +236,11 @@ def main():
         n_gen = get_notices(soup)
 
         last_notice = load_last()
+        if last_notice:
+            logger.info(f"Loaded last notice - {last_notice}")
+        else:
+            logger.info(f"No last notice. SCRIPT RUNNING FOR FIRST TIME in current enviornment.")
+
 
         # Get the New Notices
         notices = []
@@ -250,7 +257,7 @@ def main():
             lambda x, y: newer_date(x['date'], y['date'])))
 
         for n in notices:
-            logger.info(f"Sending {n}.")
+            logger.info(f"SENDING {n}.")
             try:
                 logger.info(f"Downloading notice file {n['url']} .")
                 n_content = get(BASE_URL + n['url']).content
@@ -269,6 +276,7 @@ def main():
                     dump_last(n)
         
         if PRODUCTION:
+            logger.info("Pushing changes to git repo.")
             git_commit_push()
     
     except Exception as ex:
