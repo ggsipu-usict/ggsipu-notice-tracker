@@ -17,7 +17,7 @@ WORK_DIR = getcwd()
 LAST_NOTICE = path.join(WORK_DIR, 'yaml', 'last.yml')
 LAST_NOTICE_REMOTE = "https://raw.githubusercontent.com/GGSIPUResultTracker/test-repo/master/yaml/last.yml"
 
-TG_CHAT = "@ggsipu_notices"
+TG_CHAT = environ.get("TG_CHAT", "@ggsipu_notices")
 BOT_TOKEN = environ['BOTTOKEN']
 GIT_OAUTH_TOKEN = environ['GIT_OAUTH_TOKEN']
 T_API_RETRIES = 100
