@@ -24,7 +24,8 @@ T_API_RETRIES = 100
 
 PRODUCTION = environ.get('PRODUCTION', None)
 
-def setupLogging(logfile, to_file = True):
+
+def setupLogging(logfile, to_file=True):
     logger = getLogger()
     logger.setLevel(DEBUG)
 
@@ -109,7 +110,7 @@ def load_last():
         if path.isfile(LAST_NOTICE):
             with open(LAST_NOTICE, 'r') as fr:
                 l_notice = yaml.load(fr, Loader=yaml.CLoader)
-    
+
             logger.debug(f"Found file {LAST_NOTICE}.")
         else:
             logger.debug(f"file {LAST_NOTICE} not found.")
@@ -239,8 +240,8 @@ def main():
         if last_notice:
             logger.info(f"Loaded last notice - {last_notice}")
         else:
-            logger.info(f"No last notice. SCRIPT RUNNING FOR FIRST TIME in current enviornment.")
-
+            logger.info(
+                f"No last notice. SCRIPT RUNNING FOR FIRST TIME in current enviornment.")
 
         # Get the New Notices
         notices = []
@@ -274,11 +275,11 @@ def main():
             finally:
                 if res1:
                     dump_last(n)
-        
+
         if PRODUCTION:
             logger.info("Pushing changes to git repo.")
             git_commit_push()
-    
+
     except Exception as ex:
         logger.fatal(str(ex))
         raise ex
