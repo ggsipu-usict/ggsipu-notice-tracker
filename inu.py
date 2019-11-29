@@ -236,11 +236,12 @@ def tel_send(notice):
     res = False
     if path.basename(notice['url']).split('.')[-1] in UPLOAD_EXT:
         try:
-            n_content = get(BASE_URL + n['url']).content
+            n_content = get(BASE_URL + notice['url']).content
         except:
             res = tel_send_msg(msg_no_file)
         else:
-            res = tel_send_file(msg_file, path.basename(n['url']), n_content)
+            res = tel_send_file(
+                msg_file, path.basename(notice['url']), n_content)
     else:
         res = tel_send_msg(msg_no_file)
 
