@@ -10,6 +10,8 @@ from requests import post, get
 from requests.exceptions import ConnectionError
 
 LOG_PATH = 'inu.log'
+UPLOAD_EXT = ('pdf', 'jpg', 'jpeg', 'png', 'ppt', 'pptx',
+              'doc', 'docx', 'xls', 'xlsx', 'csv', 'zip', 'rar')
 
 BASE_URL = "http://www.ipu.ac.in"
 NOTICE_URL = BASE_URL + "/notices.php"
@@ -227,6 +229,24 @@ def tel_send_file(msg, fname, bfile):
     return False
 
 
+def tel_send(notice):
+    msg_file = f"Date :- {notice['date']} \n{notice['title']}"
+    msg_no_file = f"*Date :- * {notice['date']} \n{notice['title']} \n   → [Open]({BASE_URL + notice['url']})"
+
+    res = False
+    if path.basename(notice['url']).split('.')[-1] in UPLOAD_EXT:
+        try:
+            n_content = get(BASE_URL + n['url']).content
+        except:
+            res = tel_send_msg(msg_no_file)
+        else:
+            res = tel_send_file(msg_file, path.basename(n['url']), n_content)
+    else:
+        res = tel_send_msg(msg_no_file)
+
+    return res
+
+
 def main():
     try:
         logger.debug(f"Retriving {NOTICE_URL}.")
@@ -259,22 +279,12 @@ def main():
 
         for n in notices:
             logger.info(f"SENDING {n}.")
-            try:
-                logger.info(f"Downloading notice file {n['url']} .")
-                n_content = get(BASE_URL + n['url']).content
-            except:
-                logger.error(f"Failed to download file {n['url']}.")
-                msg = f"{n['title']} \n    - [Download]({n['url']}) \n**Date:-** {n['date']}"
-                res1 = send_msg(msg)
+            result = tel_send(n)
+            if result:
+                logger.info(f"SUCESSFULLY SENT {n}.")
+                dump_last(n)
             else:
-                logger.info(f"Download complete for {n['url']} .")
-                # msg = f"{n['title']} \n\nDate:- {n['date']}"
-                msg = f"Date:- {n['date']} \n{n['title']}"
-                res1 = send_file(msg, path.basename(n['url']), n_content)
-
-            finally:
-                if res1:
-                    dump_last(n)
+                logger.error(f"FAILED to SENT {n}.")
 
         if PRODUCTION:
             logger.info("Pushing changes to git repo.")
