@@ -236,10 +236,13 @@ def tel_send(notice):
     res = False
     if path.basename(notice['url']).split('.')[-1] in UPLOAD_EXT:
         try:
+            logger.debug(f"Downloading file {notice['url']}")
             n_content = get(BASE_URL + notice['url']).content
         except:
+            logger.error(f"Download Failed for {notice['url']}")
             res = tel_send_msg(msg_no_file)
         else:
+            logger.debug(f"Downloading Complete for file {notice['url']}")
             res = tel_send_file(
                 msg_file, path.basename(notice['url']), n_content)
     else:
