@@ -166,7 +166,7 @@ def get_notices(soup):
             yield notice
 
 
-def send_msg(msg):
+def tel_send_msg(msg):
     telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     params = (
         ('chat_id', TG_CHAT),
@@ -196,7 +196,7 @@ def send_msg(msg):
     return False
 
 
-def send_file(msg, fname, bfile):
+def tel_send_file(msg, fname, bfile):
     telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument"
     files = {'document': (fname, bfile)}
     data = (
