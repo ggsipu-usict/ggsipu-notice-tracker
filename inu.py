@@ -144,6 +144,16 @@ def _scrap_notice_tr(tr):
         if not notice_date:
             return None
 
+        # Remove newlines, extra whitespaces and
+        # escape Special Markdown Characters.
+        
+        # title = " ".join(''.join([c for c in w if c not in (
+        #     '`', '_', '*', '\n', '\t')]) for w in notice_txt.split())
+        title = " ".join(notice_txt.split())
+        title = title.translate(str.maketrans({"_":  r"\_",
+                                               "*":  r"\*",
+                                               "`":  r"\`"}))
+
         return {"date": notice_date.strip(), "title": " ".join(notice_txt.split()), "url": dwd_url.strip()}
     else:
         return None
