@@ -154,7 +154,7 @@ def _scrap_notice_tr(tr):
                                                "*":  r"\*",
                                                "`":  r"\`"}))
 
-        return {"date": notice_date.strip(), "title": " ".join(notice_txt.split()), "url": dwd_url.strip()}
+        return {"date": notice_date.strip(), "title": title, "url": dwd_url.strip()}
     else:
         return None
 
@@ -315,7 +315,6 @@ def main():
 
 if __name__ == "__main__":
 
-
     if PRODUCTION:
         logger = setupLogging(LOG_PATH, False)
         logger.info("SCRIPT STARTED [ON SERVER]")
@@ -327,6 +326,6 @@ if __name__ == "__main__":
     if not path.isdir('yaml'):
         logger.warn("No yaml folder found. Creating yaml folder.")
         makedirs('yaml')
-        
+
     main()
     logger.info("SCRIPT ENDED")
