@@ -315,10 +315,6 @@ def main():
 
 if __name__ == "__main__":
 
-    # Create yaml directory if not exist
-    if not path.isdir('yaml'):
-        logger.warn("No yaml folder found. Creating yaml folder.")
-        makedirs('yaml')
 
     if PRODUCTION:
         logger = setupLogging(LOG_PATH, False)
@@ -326,5 +322,11 @@ if __name__ == "__main__":
     else:
         logger = setupLogging(LOG_PATH, True)
         logger.info("SCRIPT STARTED [LOCAL]")
+
+    # Create yaml directory if not exist
+    if not path.isdir('yaml'):
+        logger.warn("No yaml folder found. Creating yaml folder.")
+        makedirs('yaml')
+        
     main()
     logger.info("SCRIPT ENDED")
