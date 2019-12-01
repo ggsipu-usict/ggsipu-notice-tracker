@@ -234,7 +234,7 @@ def tel_send(notice):
     msg_no_file = f"*Date :- * {notice['date']} \n{notice['title']} \n   → [Open]({BASE_URL + notice['url']})"
 
     res = False
-    if path.basename(notice['url']).split('.')[-1] in UPLOAD_EXT:
+    if path.basename(notice['url']).split('.')[-1].lower() in UPLOAD_EXT:
         try:
             logger.debug(f"Downloading file {notice['url']}")
             n_content = get(BASE_URL + notice['url']).content
