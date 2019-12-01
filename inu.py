@@ -245,6 +245,10 @@ def tel_send(notice):
             logger.debug(f"Downloading Complete for file {notice['url']}")
             res = tel_send_file(
                 msg_file, path.basename(notice['url']), n_content)
+            # If /sendDocument fail due to 413(Large File), etc then
+            # try sendMessage as fallback
+            if not res:
+                res = tel_send_msg(msg_no_file)
     else:
         res = tel_send_msg(msg_no_file)
 
