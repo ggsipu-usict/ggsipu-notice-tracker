@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+""" GGSIPU Tracker Script """
+
 from os import path, environ, getcwd, system, makedirs
 from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
 from functools import cmp_to_key
