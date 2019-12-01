@@ -311,7 +311,6 @@ def main():
 
     except Exception as ex:
         logger.exception(str(ex))
-        raise ex
 
 
 if __name__ == "__main__":
