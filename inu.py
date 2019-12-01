@@ -146,7 +146,7 @@ def _scrap_notice_tr(tr):
 
         # Remove newlines, extra whitespaces and
         # escape Special Markdown Characters.
-        
+
         # title = " ".join(''.join([c for c in w if c not in (
         #     '`', '_', '*', '\n', '\t')]) for w in notice_txt.split())
         title = " ".join(notice_txt.split())
@@ -195,10 +195,10 @@ def tel_send_msg(msg):
             logger.setLevel(DEBUG)
 
             if telegram_req.status_code == 200:
-                logger.info("Sucessfully send to /sendDocument.")
+                logger.debug("Sucessfully send to /sendDocument.")
                 return True
             else:
-                logger.error(
+                logger.debug(
                     f"Failed to send message. Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
@@ -226,10 +226,10 @@ def tel_send_file(msg, fname, bfile):
             logger.setLevel(DEBUG)
 
             if telegram_req.status_code == 200:
-                logger.info(f"Sucessfully send [{fname}] to /sendDocument.")
+                logger.debug(f"Sucessfully send [{fname}] to /sendDocument.")
                 return True
             else:
-                logger.error(
+                logger.debug(
                     f"Failed to send [{fname}]. Recieved {telegram_req.status_code} http code from /sendDocument.")
                 return False
         except ConnectionError:
@@ -258,6 +258,7 @@ def tel_send(notice):
             # If /sendDocument fail due to 413(Large File), etc then
             # try sendMessage as fallback
             if not res:
+                logger.debug('Fallback to /sendMessage.')
                 res = tel_send_msg(msg_no_file)
     else:
         res = tel_send_msg(msg_no_file)
@@ -267,7 +268,7 @@ def tel_send(notice):
 
 def main():
     try:
-        logger.debug(f"Retriving {NOTICE_URL}.")
+        logger.info(f"Retriving {NOTICE_URL}.")
 
         html = get(NOTICE_URL).text
         soup = bs.BeautifulSoup(html, 'lxml')
@@ -309,7 +310,7 @@ def main():
             git_commit_push()
 
     except Exception as ex:
-        logger.fatal(str(ex))
+        logger.exception(str(ex))
         raise ex
 
 
@@ -317,6 +318,7 @@ if __name__ == "__main__":
 
     # Create yaml directory if not exist
     if not path.isdir('yaml'):
+        logger.warn("No yaml folder found. Creating yaml folder.")
         makedirs('yaml')
 
     if PRODUCTION:
