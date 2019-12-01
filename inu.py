@@ -1,4 +1,4 @@
-from os import path, environ, getcwd, system
+from os import path, environ, getcwd, system, makedirs
 from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
 from functools import cmp_to_key
 from datetime import datetime
@@ -300,6 +300,11 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # Create yaml directory if not exist
+    if not path.isdir('yaml'):
+        makedirs('yaml')
+
     if PRODUCTION:
         logger = setupLogging(LOG_PATH, False)
         logger.info("SCRIPT STARTED [ON SERVER]")
