@@ -328,7 +328,7 @@ if __name__ == "__main__":
 
     # Create yaml directory if not exist
     if not path.isdir('yaml'):
-        logger.warn("No yaml folder found. Creating yaml folder.")
+        logger.warning("No yaml folder found. Creating yaml folder.")
         makedirs('yaml')
 
     main()
