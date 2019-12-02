@@ -25,6 +25,8 @@ LAST_NOTICE_REMOTE = "https://raw.githubusercontent.com/GGSIPUResultTracker/test
 TG_CHAT = environ.get("TG_CHAT", "@ggsipu_notices")
 BOT_TOKEN = environ['BOT_TOKEN']
 GIT_OAUTH_TOKEN = environ['GIT_OAUTH_TOKEN']
+GIT_REPO=environ['GIT_REPO']
+
 T_API_RETRIES = 100
 
 PRODUCTION = environ.get('PRODUCTION', None)
@@ -67,9 +69,8 @@ def git_commit_push():
            ""git -c \"user.name=GGSIPUTracker\" "
            "-c \"user.email=ggsipuresulttracker@@gmail.com\" "
            "commit -m \"sync: {0}\" && "" \
-           ""git push -q https://{1}@github.com/GGSIPUResultTracker/"
-           "test-repo.git HEAD:master"
-           .format(now, GIT_OAUTH_TOKEN, LAST_NOTICE))
+           ""git push -q https://{1}@github.com/{3}"
+           .format(now, GIT_OAUTH_TOKEN, LAST_NOTICE, GIT_REPO))
 
 
 def only_notice_tr(tag):
