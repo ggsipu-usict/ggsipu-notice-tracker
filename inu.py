@@ -28,6 +28,7 @@ GIT_OAUTH_TOKEN = environ['GIT_OAUTH_TOKEN']
 GIT_REPO=environ['GIT_REPO']
 
 T_API_RETRIES = 100
+MAX_ARCHIVE = environ.get('MAX_ARCHIVE', 50)
 
 PRODUCTION = environ.get('PRODUCTION', None)
 
@@ -289,14 +290,19 @@ def main():
         # Get the New Notices
         notices = []
         for nt in n_gen:
-            if nt != last_notice:
-                logger.info(f"Found New Notice - {nt}")
+            if nt != last_notice and len(notices) <=  MAX_ARCHIVE:
+                # logger.info(f"Found New Notice - {nt}")
                 notices.append(nt)
             else:
                 break
+        
+        if notices:
+            logger.info(f"{len(notices)} New Notices found !")
+        else:
+            logger.info("No New Notices found !")
+            return
 
-        logger.info(f"{len(notices)} New Notices found !")
-
+        latest_notice = notices[0]
         notices.sort(key=cmp_to_key(
             lambda x, y: newer_date(x['date'], y['date'])))
 
@@ -305,10 +311,11 @@ def main():
             result = tel_send(n)
             if result:
                 logger.info(f"SUCESSFULLY SENT {n}.")
-                dump_last(n)
+                # dump_last(n)
             else:
                 logger.error(f"FAILED to SENT {n}.")
 
+        dump_last(latest_notice)
         if PRODUCTION:
             logger.info("Pushing changes to git repo.")
             git_commit_push()
