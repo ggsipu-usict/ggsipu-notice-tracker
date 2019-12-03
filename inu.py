@@ -73,8 +73,8 @@ def git_commit_push():
            .format(now, GIT_OAUTH_TOKEN, LAST_NOTICE, GIT_REPO))
 
 
-def only_notice_tr(tag):
-    return tag.name == 'tr' and not tag.has_attr('id')
+def only_new_notice_tr(tag):
+    return tag.name == 'tr' and not tag.has_attr('id') and not tag.has_attr('style')
 
 
 def newer_date(date1, date2):
@@ -164,11 +164,11 @@ def _scrap_notice_tr(tr):
 
 
 def get_notices(soup):
-    f_tr = soup.tbody.find(only_notice_tr)
-    while f_tr:
+    f_trs = soup.tbody.find_all(only_new_notice_tr)
+    for f_tr in f_trs:
         notice = _scrap_notice_tr(f_tr)
 
-        f_tr = f_tr.nextSibling.nextSibling
+        # f_tr = f_tr.nextSibling.nextSibling
         # def next_sib(t):
         #     if t and isinstance(t.nextSibling, bs.NavigableString):
         #         return next_sib(t.nextSibling)
@@ -297,10 +297,7 @@ def main():
 
         logger.info(f"{len(notices)} New Notices found !")
 
-        notices.sort(key=cmp_to_key(
-            lambda x, y: newer_date(x['date'], y['date'])))
-
-        for n in notices:
+        for n in reversed(notices):
             logger.info(f"SENDING {n}.")
             result = tel_send(n)
             if result:
