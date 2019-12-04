@@ -70,7 +70,7 @@ def git_commit_push():
            ""git -c \"user.name=GGSIPUTracker\" "
            "-c \"user.email=ggsipuresulttracker@@gmail.com\" "
            "commit -m \"sync: {0}\" && "" \
-           ""git push -q https://{1}@github.com/{3}"
+           ""git push -f -q https://{1}@github.com/{3}"
            .format(now, GIT_OAUTH_TOKEN, LAST_NOTICE, GIT_REPO))
 
 
