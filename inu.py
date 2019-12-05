@@ -30,7 +30,7 @@ LAST_NOTICE = path.join(WORK_DIR, 'yaml', 'last.yml')
 LAST_NOTICE_REMOTE = f"https://raw.githubusercontent.com/{GIT_REPO}/{GIT_BRANCH}/yaml/last.yml"
 
 
-T_API_RETRIES = 100
+T_API_RETRIES = environ.get('T_API_RETRIES', 100)
 
 PRODUCTION = environ.get('PRODUCTION', None)
 
