@@ -16,16 +16,19 @@ LOG_PATH = 'inu.log'
 UPLOAD_EXT = ('pdf', 'jpg', 'jpeg', 'png', 'ppt', 'pptx',
               'doc', 'docx', 'xls', 'xlsx', 'csv', 'zip', 'rar')
 
-BASE_URL = "http://www.ipu.ac.in"
-NOTICE_URL = BASE_URL + "/notices.php"
-WORK_DIR = getcwd()
-LAST_NOTICE = path.join(WORK_DIR, 'yaml', 'last.yml')
-LAST_NOTICE_REMOTE = "https://raw.githubusercontent.com/GGSIPUResultTracker/test-repo/master/yaml/last.yml"
 
 TG_CHAT = environ.get("TG_CHAT", "@ggsipu_notices")
 BOT_TOKEN = environ['BOT_TOKEN']
 GIT_OAUTH_TOKEN = environ['GIT_OAUTH_TOKEN']
-GIT_REPO=environ['GIT_REPO']
+GIT_REPO = environ['GIT_REPO']
+GIT_BRANCH = environ.get('GIT_BRANCH', 'notice-archive')
+
+BASE_URL = "http://www.ipu.ac.in"
+NOTICE_URL = BASE_URL + "/notices.php"
+WORK_DIR = getcwd()
+LAST_NOTICE = path.join(WORK_DIR, 'yaml', 'last.yml')
+LAST_NOTICE_REMOTE = f"https://raw.githubusercontent.com/{GIT_REPO}/{GIT_BRANCH}/yaml/last.yml"
+
 
 T_API_RETRIES = 100
 MAX_ARCHIVE = environ.get('MAX_ARCHIVE', 50)
@@ -70,8 +73,8 @@ def git_commit_push():
            ""git -c \"user.name=GGSIPUTracker\" "
            "-c \"user.email=ggsipuresulttracker@@gmail.com\" "
            "commit -m \"sync: {0}\" && "" \
-           ""git push -f -q https://{1}@github.com/{3}"
-           .format(now, GIT_OAUTH_TOKEN, LAST_NOTICE, GIT_REPO))
+           ""git push -f -q https://{1}@github.com/{3}.git HEAD:{4}"
+           .format(now, GIT_OAUTH_TOKEN, LAST_NOTICE, GIT_REPO, GIT_BRANCH))
 
 
 def only_notice_tr(tag):
