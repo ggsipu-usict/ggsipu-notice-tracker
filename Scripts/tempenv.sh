@@ -18,7 +18,7 @@ function set_env() {
 
 function clean()
 {
-    rm -rf $1
+    rm -rf $1 &> /dev/null
 }
 
 function setup()
@@ -26,6 +26,8 @@ function setup()
     set_env $vsc_launch
     fname=$(basename $1)
     temp_dir="/tmp/${fname%.*}_tmp"
+
+    clean $temp_dir
     mkdir -p $temp_dir
 
     cp $1 $temp_dir/
@@ -35,8 +37,11 @@ function setup()
 
     echo "[TEMP_ENVR] ${fname} LAUNCH."
     ./${fname}
-    echo "[TEMP_ENVR] Cleaning ${temp_dir}."
-    clean $temp_dir
+    
+    if [[ $# -gt 1 ]]; then
+        clean $temp_dir
+        echo "[TEMP_ENVR] Cleaning ${temp_dir}."
+    fi
 }
 
 
