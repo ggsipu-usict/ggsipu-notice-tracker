@@ -18,7 +18,7 @@ function set_env() {
 
 function clean()
 {
-    rm -r $1
+    rm -rf $1
 }
 
 function setup()
