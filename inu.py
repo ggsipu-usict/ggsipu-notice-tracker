@@ -300,6 +300,9 @@ def main():
 
         logger.info(f"{len(notices)} New Notices found !")
 
+        if len(notices) == 0:
+            return
+
         for n in reversed(notices):
             logger.info(f"SENDING {n}.")
             result = tel_send(n)
