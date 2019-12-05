@@ -7,7 +7,7 @@ vsc_launch=".vscode/launch.json"
 
 function set_env() {
     if [ -f $1 ]; then
-        eval $(cat .vscode/launch.json | python -c 'import os,json,sys;envs=json.load(sys.stdin) \
+        eval $(cat $vsc_launch | python -c 'import os,json,sys;envs=json.load(sys.stdin) \
             ["configurations"][1]["env"];print(*[f"export {k}=\"{v}\";" for k,v in envs.items()], sep="")')
         echo "[TEMP_ENVR] env loaded from ${1}." 
     else
