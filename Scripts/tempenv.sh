@@ -1,4 +1,10 @@
 #!/usr/bin/bash
+# Usage:-
+# tempenv.sh SCRIPT [option]
+# -> First argument must be script.
+# -> If you want to clean the tmp directory after script ends, pass ANY thing after SCRIPT
+
+
 
 parent_dir=$(dirname $(pwd))
 vsc_launch=".vscode/launch.json"
@@ -49,6 +55,8 @@ function setup()
 if [[ $# -gt 0 ]]; then
     setup $1
 else
-    echo "[TEMP_ENVR] No script passed."
+    echo "Usage:-"
+    echo "tempenv.sh SCRIPT [clean]"
+    echo "NOTE: If you want to clean the tmp directory after script ends, pass ANY thing after SCRIPT"
 fi
 
