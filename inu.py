@@ -294,12 +294,12 @@ def main():
         # Get the New Notices
         notices = []
         for nt in n_gen:
-            if nt != last_notice and len(notices) <=  MAX_ARCHIVE:
+            if nt != last_notice and len(notices) < MAX_ARCHIVE:
                 # logger.info(f"Found New Notice - {nt}")
                 notices.append(nt)
             else:
                 break
-        
+
         if notices:
             logger.info(f"{len(notices)} New Notices found !")
         else:
