@@ -1,2 +1,0 @@
-GGSIPU Notices Tracker
-======================
