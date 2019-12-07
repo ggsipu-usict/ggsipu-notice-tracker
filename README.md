@@ -7,7 +7,8 @@ University and post them on popular cloud-based social media and messaging servi
 
 Using various shell and Python scripts, an automated job run on Linux servers every hour which upload new notices and send them to various platforms.
 
-
+# Telegram Channel
+@ggsipu_notices - [Join Here](https://t.me/ggsipu_notices)
 
 ## Disclaimer
 The project is not affiliated with GGSIPU or any other Government entity.
