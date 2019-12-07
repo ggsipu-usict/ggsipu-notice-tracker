@@ -32,7 +32,7 @@ LAST_NOTICE_REMOTE = f"https://raw.githubusercontent.com/{GIT_REPO}/{GIT_BRANCH}
 
 T_API_RETRIES = int(environ.get('T_API_RETRIES', 100))
 
-MAX_ARCHIVE = environ.get('MAX_ARCHIVE', 50)
+MAX_ARCHIVE = int(environ.get('MAX_ARCHIVE', 50))
 
 PRODUCTION = environ.get('PRODUCTION', None)
 
