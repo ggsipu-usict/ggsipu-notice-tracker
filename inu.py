@@ -85,8 +85,8 @@ def only_notice_tr(tag):
 def newer_date(date1, date2):
     """
     Return 0 if both dates are same otherwise
-    If date1 > date2, return 1
-    If date1 < date2, return -1
+    If date1 < date2, return 1
+    If date1 > date2, return -1
     """
 
     d1 = [int(s.lstrip('0')) for s in date1.split('-')]
@@ -95,9 +95,9 @@ def newer_date(date1, date2):
 
     def comp(a):
         if a > 0:
-            return 1
-        elif a < 0:
             return -1
+        elif a < 0:
+            return 1
         else:
             return 0
 
@@ -310,7 +310,7 @@ def main():
         notices.sort(key=cmp_to_key(
             lambda x, y: newer_date(x['date'], y['date'])))
 
-        for n in notices:
+        for n in reversed(notices):
             logger.info(f"SENDING {n}.")
             result = tel_send(n)
             if result:
