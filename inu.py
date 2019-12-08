@@ -80,33 +80,6 @@ def only_new_notice_tr(tag):
     return tag.name == 'tr' and not tag.has_attr('id') and not tag.has_attr('style')
 
 
-def newer_date(date1, date2):
-    """
-    Return 0 if both dates are same otherwise
-    If date1 > date2, return 1
-    If date1 < date2, return -1
-    """
-
-    d1 = [int(s.lstrip('0')) for s in date1.split('-')]
-    d2 = [int(s.lstrip('0')) for s in date2.split('-')]
-    diff = (d1[0] - d2[0], d1[1] - d2[1], d1[2] - d2[2])
-
-    def comp(a):
-        if a > 0:
-            return 1
-        elif a < 0:
-            return -1
-        else:
-            return 0
-
-    date = comp(diff[2])
-    if not date:
-        date = comp(diff[1])
-        if not date:
-            date = comp(diff[0])
-    return date
-
-
 def load_last():
     l_notice = None
     logger.debug("Loading Last sent notice.")
