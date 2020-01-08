@@ -5,6 +5,7 @@ from os import path, environ, getcwd, system, makedirs
 from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
 from functools import cmp_to_key
 from datetime import datetime
+from urllib import parse
 
 
 import yaml
@@ -133,6 +134,10 @@ def _scrap_notice_tr(tr):
         title = title.translate(str.maketrans({"_":  r"\_",
                                                "*":  r"\*",
                                                "`":  r"\`"}))
+        
+        # urlencode the dwd_url because notice dwd link contains spaces and 
+        # special characters
+        dwd_url = parse.quote(dwd_url.strip())
 
         return {"date": notice_date.strip(), "title": title, "url": dwd_url.strip()}
     else:
