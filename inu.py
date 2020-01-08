@@ -35,6 +35,10 @@ T_API_RETRIES = int(environ.get('T_API_RETRIES', 100))
 
 PRODUCTION = environ.get('PRODUCTION', None)
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.16 Safari/537.36"
+}
+
 
 def setupLogging(logfile, to_file=True):
     logger = getLogger()
@@ -232,14 +236,16 @@ def tel_send(notice):
     if path.basename(notice['url']).split('.')[-1].lower() in UPLOAD_EXT:
         try:
             logger.debug(f"Downloading file {notice['url']}")
-            n_content = get(BASE_URL + notice['url']).content
+            n_res = get(BASE_URL + notice['url'], headers=HEADERS)
+            if not n_res == 200 and n_res.content == None:
+                raise
         except:
             logger.error(f"Download Failed for {notice['url']}")
             res = tel_send_msg(msg_no_file)
         else:
             logger.debug(f"Downloading Complete for file {notice['url']}")
             res = tel_send_file(
-                msg_file, path.basename(notice['url']), n_content)
+                msg_file, path.basename(notice['url']), n_res.content)
             # If /sendDocument fail due to 413(Large File), etc then
             # try sendMessage as fallback
             if not res:
@@ -255,7 +261,7 @@ def main():
     try:
         logger.info(f"Retriving {NOTICE_URL}.")
 
-        html = get(NOTICE_URL).text
+        html = get(NOTICE_URL, headers=HEADERS).text
         soup = bs.BeautifulSoup(html, 'lxml')
 
         n_gen = get_notices(soup)
