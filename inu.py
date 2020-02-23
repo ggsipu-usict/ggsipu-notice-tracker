@@ -237,7 +237,7 @@ def tel_send(notice):
         try:
             logger.debug(f"Downloading file {notice['url']}")
             n_res = get(BASE_URL + notice['url'], headers=HEADERS)
-            if not n_res == 200 and n_res.content == None:
+            if not n_res.status_code == 200 or n_res.content == None or n_res.headers['Content-Type'] == 'text/html':
                 raise
         except:
             logger.error(f"Download Failed for {notice['url']}")
