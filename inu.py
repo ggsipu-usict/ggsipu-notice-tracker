@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """ GGSIPU Tracker Script """
 
+__version__ = "1.1.1"
+
 from os import path, environ, getcwd, system, makedirs
 from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
 from functools import cmp_to_key
@@ -138,8 +140,8 @@ def _scrap_notice_tr(tr):
         title = title.translate(str.maketrans({"_":  r"\_",
                                                "*":  r"\*",
                                                "`":  r"\`"}))
-        
-        # urlencode the dwd_url because notice dwd link contains spaces and 
+
+        # urlencode the dwd_url because notice dwd link contains spaces and
         # special characters
         dwd_url = parse.quote(dwd_url.strip())
 
@@ -309,10 +311,10 @@ if __name__ == "__main__":
 
     if PRODUCTION:
         logger = setupLogging(LOG_PATH, False)
-        logger.info("SCRIPT STARTED [ON SERVER]")
+        logger.info(f"SCRIPT STARTED (v{__version__}) [ON SERVER]")
     else:
         logger = setupLogging(LOG_PATH, True)
-        logger.info("SCRIPT STARTED [LOCAL]")
+        logger.info(f"SCRIPT STARTED (v{__version__}) [LOCAL]")
 
     # Create yaml directory if not exist
     if not path.isdir('yaml'):
@@ -320,4 +322,4 @@ if __name__ == "__main__":
         makedirs('yaml')
 
     main()
-    logger.info("SCRIPT ENDED")
+    logger.info(f"SCRIPT ENDED (v{__version__})")
