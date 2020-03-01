@@ -346,6 +346,13 @@ class Hostel(Source):
     notice_url = base_url + '/hostels.php'
 
 
+class Examination(Source):
+    __source_name__ = "Examination"
+    dispatchers = [Telegram, ]
+    base_url = 'http://www.ipu.ac.in'
+    notice_url = base_url + '/exam_notices.php'
+
+
 def main(sources):
     try:
         for src in sources:
@@ -364,7 +371,7 @@ if __name__ == "__main__":
         logger = setupLogging(LOG_PATH, True)
         logger.info(f"SCRIPT STARTED (v{__version__}) [LOCAL]")
 
-    sources = [OfficialNotice, Hostel]
+    sources = [OfficialNotice, Hostel, Examination]
     logger.info(f"Notice Sources - {sources}")
 
     main(sources)
