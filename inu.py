@@ -93,19 +93,8 @@ def scrap_notice_tr(tr):
         if not notice_date:
             return None
 
-        # Remove newlines, extra whitespaces and
-        # escape Special Markdown Characters.
-
-        # title = " ".join(''.join([c for c in w if c not in (
-        #     '`', '_', '*', '\n', '\t')]) for w in notice_txt.split())
+        # Remove newlines, extra whitespaces 
         title = " ".join(notice_txt.split())
-        title = title.translate(str.maketrans({"_":  r"\_",
-                                               "*":  r"\*",
-                                               "`":  r"\`"}))
-
-        # urlencode the dwd_url because notice dwd link contains spaces and
-        # special characters
-        # dwd_url = parse.quote(dwd_url.strip())
 
         return {"date": notice_date.strip(), "title": title, "url": dwd_url.strip()}
     else:
