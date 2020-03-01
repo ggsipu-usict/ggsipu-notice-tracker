@@ -3,17 +3,13 @@
 
 __version__ = "2.0.0-dev"
 
-from os import path, environ, getcwd, system, makedirs
+from os import path, environ, getcwd, makedirs
 from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
-from functools import cmp_to_key
-from datetime import datetime
-from urllib import parse
 
 
 import yaml
 import bs4 as bs
 from requests import post, get
-from requests.exceptions import ConnectionError
 
 LOG_PATH = 'inu.log'
 UPLOAD_EXT = ('pdf', 'jpg', 'jpeg', 'png', 'ppt', 'pptx',
