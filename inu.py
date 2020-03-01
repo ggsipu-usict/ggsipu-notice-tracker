@@ -69,19 +69,6 @@ def setupLogging(logfile, to_file=True):
     return logger
 
 
-def git_commit_push():
-    """
-    git add - git commit - git push
-    [source -https://github.com/XiaomiFirmwareUpdater/mi-firmware-updater/blob/master/xfu.py]
-    """
-    now = str(datetime.today()).split('.')[0]
-    system("git add {2} && "" \
-           ""git -c \"user.name=GGSIPUTracker\" "
-           "-c \"user.email=ggsipuresulttracker@@gmail.com\" "
-           "commit -m \"sync: {0}\" && "" \
-           ""git push -f -q https://{1}@github.com/{3}.git HEAD:{4}"
-           .format(now, GIT_OAUTH_TOKEN, LAST_NOTICE, GIT_REPO, GIT_BRANCH))
-
 
 def only_new_notice_tr(tag):
     return tag.name == 'tr' and not tag.has_attr('id') and not tag.has_attr('style')
