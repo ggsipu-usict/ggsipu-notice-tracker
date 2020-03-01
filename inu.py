@@ -309,8 +309,10 @@ class Source(metaclass=InstanceReprMixin):
         res_dict = {}
         for dispatcher in self.dispatchers:
             res_dict[dispatcher.__dispatcher_name__] = True
+            logger.debug(f'Attempting to dispatch notice to {dispatcher.__dispatcher_name__}.')
             res = dispatcher.send(notice, self.__source_name__)
             if not res:
+                logger.debug(f'Failed to dispatch notice to {dispatcher.__dispatcher_name__}.')
                 res_dict[dispatcher.__dispatcher_name__] = False
         return res_dict
 
@@ -319,6 +321,7 @@ class Source(metaclass=InstanceReprMixin):
         logger.info(f"Found {notices} new notices. Total - {len(notices)}")
 
         for n in reversed(notices):
+            logger.info(f'Sending {n}')
             res_dict = self.dispatch_notice(n)
             if True in res_dict.values():
                 self.dump_notices.insert(0, n)
