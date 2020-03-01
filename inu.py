@@ -18,20 +18,6 @@ UPLOAD_EXT = ('pdf', 'jpg', 'jpeg', 'png', 'ppt', 'pptx',
 
 TG_CHAT = environ.get("TG_CHAT", "@ggsipu_notices")
 BOT_TOKEN = environ['BOT_TOKEN']
-GIT_OAUTH_TOKEN = environ['GIT_OAUTH_TOKEN']
-GIT_REPO = environ['GIT_REPO']
-GIT_BRANCH = environ.get('GIT_BRANCH', 'notice-archive')
-
-BASE_URL = "http://www.ipu.ac.in"
-NOTICE_URL = BASE_URL + "/notices.php"
-WORK_DIR = getcwd()
-LAST_NOTICE = path.join(WORK_DIR, 'yaml', 'last.yml')
-LAST_NOTICE_REMOTE = f"https://raw.githubusercontent.com/{GIT_REPO}/{GIT_BRANCH}/yaml/last.yml"
-
-
-T_API_RETRIES = int(environ.get('T_API_RETRIES', 100))
-
-PRODUCTION = environ.get('PRODUCTION', None)
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.16 Safari/537.36"
