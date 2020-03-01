@@ -69,7 +69,6 @@ def setupLogging(logfile, to_file=True):
     return logger
 
 
-
 def only_new_notice_tr(tag):
     return tag.name == 'tr' and not tag.has_attr('id') and not tag.has_attr('style')
 
@@ -93,7 +92,7 @@ def scrap_notice_tr(tr):
         if not notice_date:
             return None
 
-        # Remove newlines, extra whitespaces 
+        # Remove newlines, extra whitespaces
         title = " ".join(notice_txt.split())
 
         return {"date": notice_date.strip(), "title": title, "url": dwd_url.strip()}
@@ -269,7 +268,6 @@ class Source(metaclass=InstanceReprMixin):
 
         self.dump_notices = self._load_dnotices()
 
-
         self.failed_notices = []
 
     def __repr__(self):
@@ -309,10 +307,12 @@ class Source(metaclass=InstanceReprMixin):
         res_dict = {}
         for dispatcher in self.dispatchers:
             res_dict[dispatcher.__dispatcher_name__] = True
-            logger.debug(f'Attempting to dispatch notice to {dispatcher.__dispatcher_name__}.')
+            logger.debug(
+                f'Attempting to dispatch notice to {dispatcher.__dispatcher_name__}.')
             res = dispatcher.send(notice, self.__source_name__)
             if not res:
-                logger.debug(f'Failed to dispatch notice to {dispatcher.__dispatcher_name__}.')
+                logger.debug(
+                    f'Failed to dispatch notice to {dispatcher.__dispatcher_name__}.')
                 res_dict[dispatcher.__dispatcher_name__] = False
         return res_dict
 
@@ -339,6 +339,13 @@ class OfficialNotice(Source):
     notice_url = base_url + '/notices.php'
 
 
+class Hostel(Source):
+    __source_name__ = "Hostel"
+    dispatchers = [Telegram, ]
+    base_url = 'http://www.ipu.ac.in'
+    notice_url = base_url + '/hostels.php'
+
+
 def main(sources):
     try:
         for src in sources:
@@ -357,7 +364,7 @@ if __name__ == "__main__":
         logger = setupLogging(LOG_PATH, True)
         logger.info(f"SCRIPT STARTED (v{__version__}) [LOCAL]")
 
-    sources = [OfficialNotice, ]
+    sources = [OfficialNotice, Hostel]
     logger.info(f"Notice Sources - {sources}")
 
     main(sources)
