@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ GGSIPU Tracker Script """
 
-__version__ = "1.1.1"
+__version__ = "2.0.0-dev"
 
 from os import path, environ, getcwd, system, makedirs
 from logging import handlers, Formatter, StreamHandler, DEBUG, INFO, getLogger
@@ -54,7 +54,7 @@ def setupLogging(logfile, to_file=True):
             backupCount=100)
         filehandler.setLevel(DEBUG)
         fileformatter = Formatter(
-            '%(asctime)s %(levelname)-8s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+            '%(asctime)s %(levelname)-8s: %(funcName)s : %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
         filehandler.setFormatter(fileformatter)
         logger.addHandler(filehandler)
 
@@ -62,7 +62,7 @@ def setupLogging(logfile, to_file=True):
     streamhandler = StreamHandler()
     streamhandler.setLevel(DEBUG)
     streamformatter = Formatter(
-        '[%(levelname)s]: %(message)s')
+        '[%(levelname)s] %(funcName)s: %(message)s')
     streamhandler.setFormatter(streamformatter)
     logger.addHandler(streamhandler)
 
@@ -87,32 +87,7 @@ def only_new_notice_tr(tag):
     return tag.name == 'tr' and not tag.has_attr('id') and not tag.has_attr('style')
 
 
-def load_last():
-    l_notice = None
-    logger.debug("Loading Last sent notice.")
-    if PRODUCTION:
-        logger.debug(f"Retriving {LAST_NOTICE_REMOTE}.")
-
-        l_yml = get(LAST_NOTICE_REMOTE).text
-        l_notice = yaml.load(l_yml, Loader=yaml.CLoader)
-    else:
-        if path.isfile(LAST_NOTICE):
-            with open(LAST_NOTICE, 'r') as fr:
-                l_notice = yaml.load(fr, Loader=yaml.CLoader)
-
-            logger.debug(f"Found file {LAST_NOTICE}.")
-        else:
-            logger.debug(f"file {LAST_NOTICE} not found.")
-    return l_notice
-
-
-def dump_last(notice):
-    with open(LAST_NOTICE, 'w+') as fo:
-        yaml.dump(notice, fo, Dumper=yaml.CDumper)
-    logger.debug(f"Dumped '{notice}' to {LAST_NOTICE}")
-
-
-def _scrap_notice_tr(tr):
+def scrap_notice_tr(tr):
     tds = tr.find_all('td')
     # Check if only two tds are present
     if len(tds) != 2:
@@ -143,166 +118,253 @@ def _scrap_notice_tr(tr):
 
         # urlencode the dwd_url because notice dwd link contains spaces and
         # special characters
-        dwd_url = parse.quote(dwd_url.strip())
+        # dwd_url = parse.quote(dwd_url.strip())
 
         return {"date": notice_date.strip(), "title": title, "url": dwd_url.strip()}
     else:
         return None
 
 
-def get_notices(soup):
+def get_notices(soup, url_prefix=""):
     f_trs = soup.tbody.find_all(only_new_notice_tr)
     for f_tr in f_trs:
-        notice = _scrap_notice_tr(f_tr)
-
-        # f_tr = f_tr.nextSibling.nextSibling
-        # def next_sib(t):
-        #     if t and isinstance(t.nextSibling, bs.NavigableString):
-        #         return next_sib(t.nextSibling)
-        #     elif not t:
-        #         return None
-        #     else:
-        #         return t.nextSibling
-        # f_tr = next_sib(f_tr)
-
+        notice = scrap_notice_tr(f_tr)
         if notice:
+            notice['url'] = url_prefix + notice['url']
             yield notice
 
 
-def tel_send_msg(msg):
-    telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    params = (
-        ('chat_id', TG_CHAT),
-        ('text', msg),
-        ('parse_mode', "Markdown"),
-        ('disable_web_page_preview', "yes")
-    )
-    for _ in range(T_API_RETRIES):
-        try:
-            logger.debug(f"Sending message to /sendMessage.")
-
-            logger.setLevel(INFO)
-            telegram_req = post(telegram_url, params=params)
-            logger.setLevel(DEBUG)
-
-            if telegram_req.status_code == 200:
-                logger.debug("Sucessfully send to /sendDocument.")
-                return True
-            else:
-                logger.debug(
-                    f"Failed to send message. Recieved {telegram_req.status_code} http code from /sendDocument.")
-                return False
-        except ConnectionError:
-            pass
-    logger.critical(
-        f"Failed to send message after {T_API_RETRIES} retries.")
-    return False
-
-
-def tel_send_file(msg, fname, bfile):
-    telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument"
-    files = {'document': (fname, bfile)}
-    data = (
-        ('chat_id', TG_CHAT),
-        ('caption', msg),
-        ('parse_mode', "Markdown")
-    )
-
-    for _ in range(T_API_RETRIES):
-        try:
-            logger.debug(f"Sending file [{fname}] to /sendDocument.")
-
-            logger.setLevel(INFO)
-            telegram_req = post(telegram_url, data=data, files=files)
-            logger.setLevel(DEBUG)
-
-            if telegram_req.status_code == 200:
-                logger.debug(f"Sucessfully send [{fname}] to /sendDocument.")
-                return True
-            else:
-                logger.debug(
-                    f"Failed to send [{fname}]. Recieved {telegram_req.status_code} http code from /sendDocument.")
-                return False
-        except ConnectionError:
-            pass
-    logger.critical(
-        f"Failed to send [{fname}] after {T_API_RETRIES} retries.")
-    return False
-
-
-def tel_send(notice):
-    msg_file = f"Date :- {notice['date']} \n{notice['title']}"
-    msg_no_file = f"*Date :- * {notice['date']} \n{notice['title']} \n   → [Open]({BASE_URL + notice['url']})"
-
-    res = False
-    if path.basename(notice['url']).split('.')[-1].lower() in UPLOAD_EXT:
-        try:
-            logger.debug(f"Downloading file {notice['url']}")
-            n_res = get(BASE_URL + notice['url'], headers=HEADERS)
-            if not n_res.status_code == 200 or n_res.content == None or n_res.headers['Content-Type'] == 'text/html':
-                raise
-        except:
-            logger.error(f"Download Failed for {notice['url']}")
-            res = tel_send_msg(msg_no_file)
-        else:
-            logger.debug(f"Downloading Complete for file {notice['url']}")
-            fname = parse.unquote(path.basename(notice['url']))
-            res = tel_send_file(
-                msg_file, fname, n_res.content)
-            # If /sendDocument fail due to 413(Large File), etc then
-            # try sendMessage as fallback
-            if not res:
-                logger.debug('Fallback to /sendMessage.')
-                res = tel_send_msg(msg_no_file)
-    else:
-        res = tel_send_msg(msg_no_file)
-
-    return res
-
-
-def main():
+def download_file(url, html_allow=False, headers=HEADERS, raise_ex=False):
     try:
-        logger.info(f"Retriving {NOTICE_URL}.")
+        resp = get(url, headers=headers)
+        if not resp.status_code == 200 or resp.content == None or (('text/html' in resp.headers['Content-Type']) & (not html_allow)):
+            raise
+        ret = resp.text if html_allow else resp.content
+        return ret
+    except Exception as ex:
+        if raise_ex:
+            raise ex
+        return None
 
-        html = get(NOTICE_URL, headers=HEADERS).text
-        soup = bs.BeautifulSoup(html, 'lxml')
 
-        n_gen = get_notices(soup)
+class InstanceReprMixin(type):
+    def __repr__(self):
+        return f'{self.__name__}'
 
-        last_notice = load_last()
-        if last_notice:
-            logger.info(f"Loaded last notice - {last_notice}")
-        else:
-            logger.info(
-                f"No last notice. SCRIPT RUNNING FOR FIRST TIME in current enviornment.")
 
-        # Get the New Notices
-        notices = []
-        for nt in n_gen:
-            if nt != last_notice:
-                logger.info(f"Found New Notice - {nt}")
-                notices.append(nt)
+class Dispatcher(metaclass=InstanceReprMixin):
+    __dispatcher_name__ = 'BaseDispatcher'
+
+    @classmethod
+    def send(cls, notice, src):
+        raise NotImplementedError
+
+
+class Telegram(Dispatcher):
+    __dispatcher_name__ = 'Telegram'
+
+    _retries = T_API_RETRIES
+    channel_id = TG_CHAT
+    bot_token = BOT_TOKEN
+    bot_endpoint = f"https://api.telegram.org/bot{bot_token}"
+
+    @staticmethod
+    def _escape_md2(text):
+        return text.translate(str.maketrans({"_":  r"\_",
+                                             "*":  r"\*",
+                                             "[":  r"\[",
+                                             "]":  r"\]",
+                                             "(":  r"\(",
+                                             ")":  r"\)",
+                                             "~":  r"\~",
+                                             "`":  r"\`",
+                                             ">":  r"\>",
+                                             "#":  r"\#",
+                                             "+":  r"\+",
+                                             "-":  r"\-",
+                                             "=":  r"\=",
+                                             "|":  r"\|",
+                                             "{":  r"\{",
+                                             "{":  r"\{",
+                                             ",":  r"\,",
+                                             ".":  r"\.",
+                                             "!":  r"\!"
+                                             }
+                                            ))
+
+    @classmethod
+    def _post(cls, endpoint, **kwargs):
+        return post(cls.bot_endpoint + endpoint, **kwargs)
+
+    @classmethod
+    def sendMessage(cls, msg, markdownv2=True, web_page_preview=False, reply_markup=None, **kwargs):
+        data = {
+            'chat_id': cls.channel_id,
+            'text': msg,
+            'disable_web_page_preview': not web_page_preview
+        }
+        if markdownv2:
+            data['parse_mode'] = 'MarkdownV2'
+        if reply_markup:
+            data['reply_markup'] = reply_markup
+
+        data.update(kwargs)
+        return cls._post('/sendMessage', json=data)
+
+    @classmethod
+    def sendDocument(cls, fname, bfile, caption=None, markdownv2=True, **kwargs):
+        files = {'document': (fname, bfile)}
+        data = {
+            'chat_id': TG_CHAT,
+            'caption': caption,
+            'parse_mode': "MarkdownV2" if markdownv2 else 'html'
+        }
+        data.update(kwargs)
+        return cls._post('/sendDocument', data=data, files=files)
+
+    @classmethod
+    def send_msg_btn(cls, msg, btns):
+        """btns: array of array of (title, url)"""
+        reply_markup = {
+            'inline_keyboard': [[{'text': btn[0], 'url':btn[1]} for btn in row] for row in btns]
+        }
+        return cls.sendMessage(msg, reply_markup=reply_markup).status_code == 200
+
+    @classmethod
+    def send_doc_from_url(cls, url, caption=None, markdownv2=True, **kwargs):
+        return cls.sendDocument(None, url, caption, markdownv2, **kwargs).status_code == 200
+
+    @classmethod
+    def send(cls, notice, src):
+        msg = f"\#{cls._escape_md2(src)}  \n*Date \- * {cls._escape_md2(notice['date'])} \n{cls._escape_md2(notice['title'])}"
+        fname = path.basename(notice['url'])
+        if fname.split('.')[-1].lower() in UPLOAD_EXT:
+            if not cls.send_doc_from_url(notice['url'], caption=msg):
+                # Try downloading and sending
+                bfile = download_file(notice['url'])
+                if bfile and cls.sendDocument(fname, bfile, msg).status_code == 200:
+                    return True
+                else:
+                    return cls.send_msg_btn(msg, [[(f"Open - {fname}", notice['url'])]])
             else:
-                break
+                return True
+        else:
+            return cls.send_msg_btn(msg, [[("Open Notice", notice['url'])]])
 
-        logger.info(f"{len(notices)} New Notices found !")
 
-        if len(notices) == 0:
-            return
+class Source(metaclass=InstanceReprMixin):
+    __source_name__ = "BaseSource"
+    _headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36"
+    }
+
+    dispatchers = []
+    base_url = None
+    notice_url = None
+
+    MAX_DUMP_SIZE = 15
+
+    @classmethod
+    def _raw_notice_gen(cls):
+        html = download_file(
+            cls.notice_url, html_allow=True, raise_ex=True)
+        soup = bs.BeautifulSoup(html, 'lxml')
+        return get_notices(soup, url_prefix=cls.base_url)
+
+    @staticmethod
+    def diff_notices_dicts(list1, list2):
+        set_list1 = set(tuple(d.items()) for d in list1)
+        set_list2 = set(tuple(d.items()) for d in list2)
+
+        # Items in list1 not in list2
+        differnce = set_list1 - set_list2
+        diffs = []
+        for elem in differnce:
+            diffs.append(dict((x, y) for x, y in elem))
+        # return sorted diff
+        return [i for i in list1 if i in diffs]
+
+    def __init__(self):
+        self.dump_path = path.join('dump', self.__source_name__, 'dump.yml')
+        self.failed_path = path.join(
+            'dump', self.__source_name__, 'failed.yml')
+
+        makedirs(path.dirname(self.dump_path), exist_ok=True)
+
+        self.dump_notices = self._load_dnotices()
+
+
+        self.failed_notices = []
+
+    def __repr__(self):
+        return f"{self.__source_name__}({self.notice_url})"
+
+    def _load_yml(self, file):
+        data = []
+        if path.isfile(file):
+            with open(file, 'r') as fr:
+                data = yaml.load(fr, Loader=yaml.CLoader)
+        data = data if data else []
+
+        logger.debug(f"Load from {file} - {data}. Total - {len(data)}")
+        return data
+
+    def _dump_yml(self, data, file):
+        logger.debug(f"Dumped into {file} - {data}")
+
+        with open(file, 'w+') as fo:
+            yaml.dump(data, fo, Dumper=yaml.CDumper)
+
+    def _load_dnotices(self):
+        return self._load_yml(self.dump_path)
+
+    def _load_fnotices(self):
+        return self._load_yml(self.failed_path)
+
+    def _dump_notices(self):
+        self._dump_yml(self.dump_notices[:self.MAX_DUMP_SIZE], self.dump_path)
+        self._dump_yml(self.failed_notices, self.failed_path)
+
+    def new_notices(self):
+        return self.diff_notices_dicts(list(self._raw_notice_gen()), self.dump_notices)
+
+    def dispatch_notice(self, notice):
+        # return {"__target__name__":True,...}
+        res_dict = {}
+        for dispatcher in self.dispatchers:
+            res_dict[dispatcher.__dispatcher_name__] = True
+            res = dispatcher.send(notice, self.__source_name__)
+            if not res:
+                res_dict[dispatcher.__dispatcher_name__] = False
+        return res_dict
+
+    def send_new(self):
+        notices = self.new_notices()
+        logger.info(f"Found {notices} new notices. Total - {len(notices)}")
 
         for n in reversed(notices):
-            logger.info(f"SENDING {n}.")
-            result = tel_send(n)
-            if result:
-                logger.info(f"SUCESSFULLY SENT {n}.")
-                dump_last(n)
+            res_dict = self.dispatch_notice(n)
+            if True in res_dict.values():
+                self.dump_notices.insert(0, n)
             else:
-                logger.error(f"FAILED to SENT {n}.")
+                n['dispatch'] = res_dict
+                self.failed_notices.append(n)
 
-        if PRODUCTION:
-            logger.info("Pushing changes to git repo.")
-            git_commit_push()
+        self._dump_notices()
 
+
+class OfficialNotice(Source):
+    __source_name__ = "OfficialNotice"
+    dispatchers = [Telegram, ]
+    base_url = 'http://www.ipu.ac.in'
+    notice_url = base_url + '/notices.php'
+
+
+def main(sources):
+    try:
+        for src in sources:
+            logger.info(f"Processing New Notices for - {src}")
+            src().send_new()
     except Exception as ex:
         logger.exception(str(ex))
 
@@ -316,10 +378,8 @@ if __name__ == "__main__":
         logger = setupLogging(LOG_PATH, True)
         logger.info(f"SCRIPT STARTED (v{__version__}) [LOCAL]")
 
-    # Create yaml directory if not exist
-    if not path.isdir('yaml'):
-        logger.warning("No yaml folder found. Creating yaml folder.")
-        makedirs('yaml')
+    sources = [OfficialNotice, ]
+    logger.info(f"Notice Sources - {sources}")
 
-    main()
+    main(sources)
     logger.info(f"SCRIPT ENDED (v{__version__})")
