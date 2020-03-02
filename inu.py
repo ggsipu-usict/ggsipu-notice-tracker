@@ -120,7 +120,6 @@ class Dispatcher(metaclass=InstanceReprMixin):
 class Telegram(Dispatcher):
     __dispatcher_name__ = 'Telegram'
 
-    _retries = T_API_RETRIES
     channel_id = TG_CHAT
     bot_token = BOT_TOKEN
     bot_endpoint = f"https://api.telegram.org/bot{bot_token}"
