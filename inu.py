@@ -11,6 +11,7 @@ import yaml
 import bs4 as bs
 from requests import post, get
 
+PRODUCTION = environ.get("PRODUCTION", False)
 LOG_PATH = 'inu.log'
 UPLOAD_EXT = ('pdf', 'jpg', 'jpeg', 'png', 'ppt', 'pptx',
               'doc', 'docx', 'xls', 'xlsx', 'csv', 'zip', 'rar')
