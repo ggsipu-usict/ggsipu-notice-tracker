@@ -315,7 +315,7 @@ class Source(metaclass=InstanceReprMixin):
 
 
 class OfficialNotice(Source):
-    __source_name__ = "OfficialNotice"
+    __source_name__ = "Notice"
     dispatchers = [Telegram, ]
     base_url = 'http://www.ipu.ac.in'
     notice_url = base_url + '/notices.php'
