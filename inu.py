@@ -105,13 +105,13 @@ def get_notices(soup, url_prefix=""):
             yield notice
 
 
-def download_file(url, html_allow=False, headers=HEADERS, raise_ex=False):
+def download_file(url, text_allow=False, headers=HEADERS, raise_ex=False):
     try:
         resp = get(url, headers=headers)
         if (
             not resp.status_code == 200
             or resp.content == None
-            or (("text/html" in resp.headers["Content-Type"]) & (not html_allow))
+            or (("text/" in resp.headers["Content-Type"]) & (not html_allow))
         ):
             raise Exception(f"Error while downloading file, status_code={resp.status_code}")
         ret = resp.text if html_allow else resp.content
