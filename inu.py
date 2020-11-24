@@ -5,6 +5,7 @@ __version__ = "2.0.0-dev"
 
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger, handlers
 from os import environ, getcwd, makedirs, path
+from pathlib import Path
 from urllib.parse import urljoin
 
 import bs4 as bs
@@ -117,7 +118,7 @@ def download_file(url, text_allow=False, headers=HEADERS, raise_ex=False):
         if (
             not resp.status_code == 200
             or resp.content == None
-            or (("text/" in resp.headers["Content-Type"]) & (not html_allow))
+            or (("text/" in resp.headers["Content-Type"]) & (not text_allow))
         ):
             raise Exception(f"Error while downloading file, status_code={resp.status_code}")
         ret = resp.text if html_allow else resp.content
@@ -280,8 +281,16 @@ class Source(metaclass=InstanceReprMixin):
 
         makedirs(path.dirname(self.dump_path), exist_ok=True)
 
-        self.dump_notices = self._load_dnotices()
+        self.dump_dir = Path("dump" / self.__source_name__)
+        self.dump_dir.mkdir(exist_ok=True)
 
+        self.dump_path = self.dump_dir / "dump.yml"
+        self.dump_path.touch(exist_ok=True)
+
+        self.failed_path = self.dump_dir / "failed.yml"
+        self.failed_path.touch(exist_ok=True)
+
+        self.dump_notices = self._load_dnotices()
         self.failed_notices = []
 
     def __repr__(self):
@@ -289,8 +298,7 @@ class Source(metaclass=InstanceReprMixin):
 
     def _load_yml(self, file):
         data = []
-        if path.isfile(file):
-            with open(file, "r") as fr:
+        with open(file, "r") as fr:
             data = yaml.load(fr, Loader=YAMLLoader)
         data = data if data else []
 
