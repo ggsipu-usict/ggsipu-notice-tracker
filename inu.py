@@ -120,8 +120,10 @@ def download_file(url, text_allow=False, headers=HEADERS, raise_ex=False):
             or resp.content == None
             or (("text/" in resp.headers["Content-Type"]) & (not text_allow))
         ):
-            raise Exception(f"Error while downloading file, status_code={resp.status_code}")
-        ret = resp.text if html_allow else resp.content
+            raise Exception(
+                f"Error while downloading file, status_code={resp.status_code}"
+            )
+        ret = resp.text if text_allow else resp.content
         return ret
     except Exception as ex:
         if raise_ex:
