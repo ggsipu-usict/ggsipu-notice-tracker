@@ -11,6 +11,12 @@ import bs4 as bs
 import yaml
 from requests import get, post
 
+# use fast libYAML parsers if available
+try:
+    from yaml import CLoader as YAMLLoader, CDumper as YAMLDumper
+except ImportError:
+    from yaml import Loader as YAMLLoader, Dumper as YAMLDumper
+
 PRODUCTION = environ.get("PRODUCTION", False)
 LOG_PATH = "inu.log"
 UPLOAD_EXT = (
@@ -251,7 +257,7 @@ class Source(metaclass=InstanceReprMixin):
 
     @classmethod
     def _raw_notice_gen(cls):
-        html = download_file(cls.notice_url, html_allow=True, raise_ex=True)
+        html = download_file(cls.notice_url, text_allow=True, raise_ex=True)
         soup = bs.BeautifulSoup(html, "lxml")
         return get_notices(soup, url_prefix=cls.base_url)
 
@@ -285,7 +291,7 @@ class Source(metaclass=InstanceReprMixin):
         data = []
         if path.isfile(file):
             with open(file, "r") as fr:
-                data = yaml.load(fr, Loader=yaml.CLoader)
+            data = yaml.load(fr, Loader=YAMLLoader)
         data = data if data else []
 
         logger.debug(f"Load from {file} - {data}. Total - {len(data)}")
@@ -295,7 +301,7 @@ class Source(metaclass=InstanceReprMixin):
         logger.debug(f"Dumped into {file} - {data}")
 
         with open(file, "w+") as fo:
-            yaml.dump(data, fo, Dumper=yaml.CDumper)
+            yaml.dump(data, fo, Dumper=YAMLDumper)
 
     def _load_dnotices(self):
         return self._load_yml(self.dump_path)
