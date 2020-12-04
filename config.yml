@@ -1,0 +1,84 @@
+# Default Config for inu.py
+max_dump: 100
+notice_sources:
+  - name: Hostel
+    dispatchers:
+      - telegram:
+        - channel_id: -1001321820593+
+    url: http://www.ipu.ac.in/hostels.php
+    max_dump: 20
+
+  # - name: Notice
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/notices.php
+
+
+  # - name: Examination
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/exam_notices.php
+
+  # - name: Datesheet
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/exam_datesheet.php
+
+  # - name: NAD
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/nadnotices.php
+
+  # - name: ExaminationRegulation
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/exam_regulation_form.php
+
+  # - name: Misc
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/genadmin.php
+    
+  # - name: Library
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/library.php
+
+  # - name: Sports
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/sports.php
+
+  # - name: IndustryLinkage
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/industry_linkage.php
+    
+  # - name: Proctor
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/proctor.php
+
+  # - name: DSW
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/dsw.php
+
+  # - name: NSS
+  #   dispatchers:
+  #     - telegram:
+  #       - channel_id: -1001321820593+
+  #   url: http://www.ipu.ac.in/nsscellmain.php
+
+
